@@ -9,8 +9,6 @@ void main() {
 
   Uint64 as = Uint64.parse("0xAAAA_AAAA_AAAA_AAAA");
 
-
-
   void checkGetNBits(
     Uint64 cache,
     int bitsLeft,
@@ -121,5 +119,18 @@ void main() {
     check(() => bc.getCacheBits(2)).throws<AssertionError>();
     check(bc.bitsLeftInCache).equals(1);
     check(bc.cache).equals(Uint64.zero);
+  });
+
+  test("nextBits", () {
+    Uint64 desc = Uint64.parse("0xFEDC_BA98_7654_3210");
+    BitCache bc = BitCache.withPresets(desc, 64, desc);
+
+    check(bc.nextBits(1)).equals(IList([Uint64.one]));
+    check(bc.nextBits(2)).equals(IList([Uint64.fromInt(3)]));
+    check(bc.nextBits(5)).equals(IList([Uint64.fromInt(0x1E)]));
+    check(bc.nextBits(9)).equals(IList([Uint64.fromInt(0x1_B9)]));
+    check(bc.nextBits(15)).equals(IList([Uint64.fromInt(0x3A98)]));
+    check(bc.nextBits(31)).equals(IList([Uint64.fromInt(0x3B2A_1908)]));
+    check(bc.nextBits(8)).equals(IList([Uint64.fromInt(0x7F)]));
   });
 }
