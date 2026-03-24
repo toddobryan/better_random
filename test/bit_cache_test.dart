@@ -1,5 +1,6 @@
 import 'package:better_random/src/bit_cache.dart';
 import 'package:checks/checks.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:sized_ints/sized_ints.dart';
 import 'package:test/test.dart';
 
@@ -8,12 +9,7 @@ void main() {
 
   Uint64 as = Uint64.parse("0xAAAA_AAAA_AAAA_AAAA");
 
-  BitCache makeBitCache(Uint64 cache, int bitsLeft, Uint64 randInt) {
-    BitCache bc = BitCache(() => randInt);
-    bc.cache = cache;
-    bc.bitsLeftInCache = bitsLeft;
-    return bc;
-  }
+
 
   void checkGetNBits(
     Uint64 cache,
@@ -23,8 +19,8 @@ void main() {
     Uint64 expectedLeftInCache, {
     Uint64? nextUint64,
   }) {
-    BitCache bc = makeBitCache(cache, bitsLeft, nextUint64 ?? Uint64.zero);
-    List<Uint64> nb = bc.nextBits(n);
+    BitCache bc = BitCache.withPresets(cache, bitsLeft, nextUint64 ?? Uint64.zero);
+    IList<Uint64> nb = bc.nextBits(n);
     print(nb);
     check(nb[0]).equals(expected);
     check(bc.cache).equals(expectedLeftInCache);
@@ -77,20 +73,53 @@ void main() {
   });
 
   test("getMoreThan64Bits", () {
-    BitCache bc = makeBitCache(Uint64.max, 64, as);
+    BitCache bc = BitCache.withPresets(Uint64.max, 64, as);
     check(bc.nextBits(128)).containsEqualInOrder([Uint64.max, as]);
     check(bc.cache).equals(Uint64.zero);
     check(bc.bitsLeftInCache).equals(0);
 
-    BitCache bc2 = makeBitCache(Uint64.max, 64, as);
+    BitCache bc2 = BitCache.withPresets(Uint64.max, 64, as);
     check(bc2.nextBits(69)).containsEqualInOrder([Uint64.fromInt(0x1F), Uint64.parse("0x57FF_FFFF_FFFF_FFFF")]);
     check(bc2.cache).equals(Uint64.parse("0x0555_5555_5555_5555"));
     check(bc2.bitsLeftInCache).equals(59);
   });
 
   test("bits across the 64 bit barrier", () {
-    BitCache bc = makeBitCache(as >>> 1, 64, as);
-    List<Uint64> nb = bc.nextBits(65);
+    BitCache bc = BitCache.withPresets(as >>> 1, 64, as);
+    IList<Uint64> nb = bc.nextBits(65);
     check(nb).containsEqualInOrder([Uint64.one, Uint64.parse("0xD555_5555_5555_5555")]);
+  });
+
+  test("getCacheBits", () {
+    Uint64 desc = Uint64.parse("0xFEDC_BA98_7654_3210");
+    BitCache bc = BitCache.withPresets(desc, 64, desc);
+
+    check(bc.getCacheBits(1)).equals(Uint64.one);
+    check(bc.bitsLeftInCache).equals(63);
+    check(bc.cache).equals(Uint64.parse("0x7EDC_BA98_7654_3210"));
+
+    check(bc.getCacheBits(2)).equals(Uint64.fromInt(3));
+    check(bc.bitsLeftInCache).equals(61);
+    check(bc.cache).equals(Uint64.parse("0x1EDC_BA98_7654_3210"));
+
+    check(bc.getCacheBits(5)).equals(Uint64.fromInt(0x1E));
+    check(bc.bitsLeftInCache).equals(56);
+    check(bc.cache).equals(Uint64.parse("0xDC_BA98_7654_3210"));
+
+    check(bc.getCacheBits(9)).equals(Uint64.fromInt(0x1_B9));
+    check(bc.bitsLeftInCache).equals(47);
+    check(bc.cache).equals(Uint64.parse("0x3A98_7654_3210"));
+
+    check(bc.getCacheBits(15)).equals(Uint64.fromInt(0x3A98));
+    check(bc.bitsLeftInCache).equals(32);
+    check(bc.cache).equals(Uint64.fromInt(0x7654_3210));
+
+    check(bc.getCacheBits(31)).equals(Uint64.fromInt(0x3B2A_1908));
+    check(bc.bitsLeftInCache).equals(1);
+    check(bc.cache).equals(Uint64.zero);
+
+    check(() => bc.getCacheBits(2)).throws<AssertionError>();
+    check(bc.bitsLeftInCache).equals(1);
+    check(bc.cache).equals(Uint64.zero);
   });
 }
