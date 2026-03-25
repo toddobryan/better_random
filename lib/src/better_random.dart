@@ -64,6 +64,17 @@ class BetterRandom {
     return _bitCache.nextBits(bits)[0].toSafeInt();
   }
 
+  int nextBits(int size) {
+    int maxBits = EnvForSafeInt.current.maxBitLength;
+    if (size > maxBits) {
+      throw ArgumentError(
+        "Current environment supports ints with $maxBits bits, "
+            "but you requested $size",
+      );
+    }
+    return _bitCache.nextBits(size)[0].toSafeInt();
+  }
+
   /// returns a random int on the interval [0, 255]
   int nextByte() => _bitCache.nextBits(8)[0].toSafeInt();
 
@@ -89,8 +100,7 @@ class BetterRandom {
     int r = _nextSafeInt();
     BigInt n = upperExc != null
         ? BigInt.from(upperExc) - BigInt.from(lowerInc)
-        : BigInt.from(EnvForSafeInt.current.maxInteger) -
-              BigInt.from(lowerInc);
+        : BigInt.from(EnvForSafeInt.current.maxInteger) - BigInt.from(lowerInc);
     BigInt m = n - BigInt.one;
     if (n & m == BigInt.zero) {
       r = (BigInt.from(r) & m + BigInt.from(lowerInc)).toSafeInt();
@@ -111,7 +121,7 @@ class BetterRandom {
     }
     return r;
   }
-  
+
   int _nextSafeInt() {
     Uint64 bits = _bitCache.nextBits(EnvForSafeInt.current.maxBitLength)[0];
     int safeInt = Int64(bits.bitList.uints).toSafeInt();
