@@ -1,5 +1,6 @@
 import "package:better_random/better_random.dart";
 import "package:checks/checks.dart";
+import "package:parameterized_test/parameterized_test.dart";
 import "package:sized_ints/sized_ints.dart";
 import "package:test/test.dart";
 
@@ -70,5 +71,20 @@ void main() {
         ..isGreaterThan(9654)
         ..isLessThan(10346);
     });
+
+    parameterizedTest("test nextInt(max) with various maxes",
+    [
+      1000,
+      1_000_000,
+      100_000_000,
+      1 << 32,
+    ],
+    (int max) {
+      List<int> countsByDecile = List.filled(10, 0);
+      for (int i = 0; i < 1000; i++) {
+
+      }
+    },
+    );
   });
 }
