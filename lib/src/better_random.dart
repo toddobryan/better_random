@@ -18,11 +18,6 @@ class BetterRandom {
   MersenneTwister64 _twister;
   BitCache _bitCache;
 
-  static final int _bitsInInt64 = 64;
-
-  static final Uint64 _lower32Mask = Uint64.fromInt(0xFFFF_FFFF);
-  static final Int64 _maxInt32PlusOne = Int64.parse("0x8000_0000");
-
   BetterRandom._(this.seed, this._twister, this._bitCache);
 
   factory BetterRandom(int seed) {
@@ -82,7 +77,7 @@ class BetterRandom {
   int nextNonNegIntBelow(int? upperExc) => nextIntInBounds(0, upperExc);
 
   /// Returns an int that is safe for the current platform uniformly
-  /// distributed in the range [lowerInc, upperExclusive). Use
+  /// distributed in the range [ lowerInc, upperExclusive ). Use
   /// null to include the max int value.
   int nextIntInBounds(int lowerInc, int? upperExc) {
     if (upperExc != null && upperExc <= lowerInc) {
@@ -119,9 +114,7 @@ class BetterRandom {
   
   int _nextSafeInt() {
     Uint64 bits = _bitCache.nextBits(EnvForSafeInt.current.maxBitLength)[0];
-    print(bits);
     int safeInt = Int64(bits.bitList.uints).toSafeInt();
-    print(safeInt.hex);
     return safeInt;
   }
 }

@@ -1,6 +1,10 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:sized_ints/sized_ints.dart';
 
+/// A 64-bit cache. A call to nextBits(n) grabs n bits from the left side of
+/// the cache, right-aligning them in the output. The left-most bits of the
+/// cache are zeroed out. If more bits are requested than are available, the
+/// function nextUint64 is called to refresh the cache.
 class BitCache {
   Uint64 _cache;
   int _bitsLeftInCache;
@@ -23,26 +27,40 @@ class BitCache {
   Uint64 get cache => _cache;
   int get bitsLeftInCache => _bitsLeftInCache;
 
-  /// Returns the next bit in this BitCache
-  int nextBit() {
-    if (bitsLeftInCache == 0) {
-      _cache = nextUint64();
-      _bitsLeftInCache = 64;
-    }
-    Uint64 valueOfLeftmostBitLeft = Uint64.one << (bitsLeftInCache - 1);
-    int bit = ((cache & valueOfLeftmostBitLeft) >>> (bitsLeftInCache - 1))
-        .toSafeInt();
-    _cache = _cache >>> 1;
-    _bitsLeftInCache--;
-    return bit;
-  }
-
   IList<Uint64> nextBits(int n) {
     if (n <= bitsLeftInCache) {
       return IList([getCacheBits(n)]);
+    } else if (n <= 64) {
+      int numLeftBits = bitsLeftInCache;
+      Uint64 leftBits = getCacheBits(bitsLeftInCache);
+      // reset cache
+      _cache = nextUint64();
+      _bitsLeftInCache = 64;
+      int numRightBits = n - numLeftBits;
+      Uint64 rightBits = getCacheBits(numRightBits);
+      Uint64 result = (leftBits << numRightBits) | rightBits;
+      return IList([result]);
     } else {
-      return const IList.empty();
+      // the first value will have the "leftover" bits, all others will have 64
+      int numBitsInFirst = _numBitsInFirstElement(n);
+      List<Uint64> result = List.generate(_uint64sForNumBits(n), (i) {
+        if (i == 0) {
+          return nextBits(numBitsInFirst)[0];
+        } else {
+          return nextBits(64)[0];
+        }
+      });
+      return IList(result);
     }
+  }
+
+  static int _uint64sForNumBits(int numBits) {
+    return (numBits ~/ 64) + (numBits % 64 == 0 ? 0 : 1);
+  }
+
+  static int _numBitsInFirstElement(int numBitsTotal) {
+    int remainder = numBitsTotal % 64;
+    return remainder == 0 ? 64 : remainder;
   }
 
   // grabs the bits from bitsLeftInCache - 1 down to (and including) lsb
@@ -60,52 +78,17 @@ class BitCache {
     return bits;
   }
 
-  /*
-  /// Returns the next n bits in this BitCache as a list of
-  /// Uint64s, with the bits starting at the n % 64th bit in element 0
-  /// and each subsequent element having all 64 bits full.
-  List<Uint64> nextBits(int n) {
-    List<Uint64> res = List.generate(_uint64sForNumBits(n), (i) {
-      if (i == 0) {
-        return _getNBits(_numBitsInFirstElement(n));
-      } else {
-        return _getNBits(64);
-      }
-    });
-    return res;
-  }
-
-  static int _uint64sForNumBits(int numBits) {
-    return (numBits ~/ 64) + (numBits % 64 == 0 ? 0 : 1);
-  }
-
-  /// Returns the next n bits in this BitCache as the lower n bits
-  /// of a Uint64. Requires n <= 64
-  Uint64 _getNBits(int n) {
-    assert(n <= 64, "Can only grab up to 64 bits");
-    Uint64 result;
-    if (n <= bitsLeftInCache) {
-      result = cache >>> (bitsLeftInCache - n);
-      cache = cache._zeroOutLeftNBits(n);
-      bitsLeftInCache -= n;
-    } else {
-      int numOfOrigBits = bitsLeftInCache;
-      Uint64 origBits = cache;
-      int numOfNextBits = n - numOfOrigBits;
-      cache = nextUint64();
-      bitsLeftInCache = 64;
-      Uint64 nextBits = _getNBits(numOfNextBits);
-      result = (origBits << numOfNextBits) | nextBits;
+  /// Returns the next bit in this BitCache
+  int nextBit() {
+    if (bitsLeftInCache == 0) {
+      _cache = nextUint64();
+      _bitsLeftInCache = 64;
     }
-    return result;
+    Uint64 valueOfLeftmostBitLeft = Uint64.one << (bitsLeftInCache - 1);
+    int bit = ((cache & valueOfLeftmostBitLeft) >>> (bitsLeftInCache - 1))
+        .toSafeInt();
+    _bitsLeftInCache--;
+    return bit;
   }
-
-  int _numBitsInFirstElement(int numBitsTotal) {
-    int remainder = numBitsTotal % 64;
-    return remainder == 0 ? 64 : remainder;
-  }*/
 }
 
-extension ZeroOut on Uint64 {
-  Uint64 _zeroOutLeftNBits(int n) => this & (Uint64.max << n);
-}
