@@ -72,19 +72,26 @@ void main() {
         ..isLessThan(10346);
     });
 
-    parameterizedTest("test nextInt(max) with various maxes",
-    [
-      1000,
-      1_000_000,
-      100_000_000,
-      1 << 32,
-    ],
-    (int max) {
-      List<int> countsByDecile = List.filled(10, 0);
-      for (int i = 0; i < 1000; i++) {
+    group("test nextInt(max) with various ranges", () {
+      final int runs = 10000;
+      final int divisions = 10;
 
-      }
-    },
-    );
+      parameterizedTest("test nextInt(max) with various maxes",
+        [
+          1000,
+          1_000_000,
+          100_000_000,
+          1 << 32,
+        ],
+            (int max) {
+          List<int> countsByDecile = List.filled(10, 0);
+          for (int i = 0; i < 1000; i++) {
+
+          }
+        },
+      );
+    });
   });
 }
+
+

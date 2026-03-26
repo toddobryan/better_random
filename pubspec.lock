@@ -29,10 +29,10 @@ packages:
     dependency: transitive
     description:
       name: async
-      sha256: "758e6d74e971c3e5aceb4110bfd6698efc7f501675bcfe0c775459a8140750eb"
+      sha256: e2eb0491ba5ddb6177742d2da23904574082139b07c1e33b8503b9f46f3e1a37
       url: "https://pub.dev"
     source: hosted
-    version: "2.13.0"
+    version: "2.13.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -89,6 +89,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.7"
+  csv:
+    dependency: "direct dev"
+    description:
+      name: csv
+      sha256: "2e0a52fb729f2faacd19c9c0c954ff450bba37aa8ab999410309e2342e7013a2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.0.0"
+  dart_statistics:
+    dependency: "direct dev"
+    description:
+      name: dart_statistics
+      sha256: "64b0d62d5d1a72bb5f814df4b20eeae15b84b92eb9ee79ec6c565050b47de1c1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0-nullsafety.0"
   fast_immutable_collections:
     dependency: "direct main"
     description:
