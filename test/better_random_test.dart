@@ -83,11 +83,13 @@ void main() {
           100_000_000,
           1 << 32,
         ],
-            (int max) {
-          List<int> countsByDecile = List.filled(10, 0);
-          for (int i = 0; i < 1000; i++) {
-
+        (int max) {
+          List<int> countsByDecile = List.filled(divisions, 0);
+          for (int i = 0; i < runs; i++) {
+            int r = br.nextInt(max);
+            countsByDecile[r ~/ (max ~/ 10)]++;
           }
+
         },
       );
     });
