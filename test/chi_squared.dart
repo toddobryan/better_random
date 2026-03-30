@@ -17,11 +17,14 @@ enum PValue {
   p005,
 }
 
-
+bool lessThanP010Uniform(List<int> counts) {
+  double chi2 = _chi2Uniform(counts);
+  return chi2 < chi2Crit[counts.length - 1]![PValue.p010]!;
+}
 
 // Finds the chi^2 value, assuming each slot is equally likely
 // (a uniform distribution)
-double chi2Uniform(List<int> counts) {
+double _chi2Uniform(List<int> counts) {
   int sum = counts.reduce((acc, elt) => acc + elt);
   double expected = sum / counts.length;
   double chi2 = (counts.map((c) => pow(c - expected, 2))
@@ -40,9 +43,9 @@ IMap<int, IMap<PValue, double>> _buildChi2Crit() {
   for (List<dynamic> row in table.sublist(1)) {
     Map<PValue, double> critVals = {};
     for (int i = 1; i < row.length; i++) {
-      critVals[PValue.values[i - 1]] = row[i];
+      critVals[PValue.values[i - 1]] = double.parse(row[i] as String);
     }
-    builder[row[0]] = IMap(critVals);
+    builder[int.parse(row[0] as String)] = IMap(critVals);
   }
   return IMap(builder);
 }

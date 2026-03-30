@@ -4,6 +4,8 @@ import "package:parameterized_test/parameterized_test.dart";
 import "package:sized_ints/sized_ints.dart";
 import "package:test/test.dart";
 
+import "chi_squared.dart";
+
 void main() {
   group("BetterRandom Dart API", () {
     BetterRandom br = BetterRandom.usingClock();
@@ -89,7 +91,7 @@ void main() {
             int r = br.nextInt(max);
             countsByDecile[r ~/ (max ~/ 10)]++;
           }
-
+          check(lessThanP010Uniform(countsByDecile)).isTrue();
         },
       );
     });
